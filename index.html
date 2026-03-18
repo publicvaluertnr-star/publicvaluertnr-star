@@ -539,8 +539,13 @@ function loadCart(){ try{ CART = JSON.parse(localStorage.getItem("wd-cart")||"{}
 
 /* ══════════════════════════════════════
    BUKA / TUTUP WARUNG
+   Status disimpan di Google Sheet agar
+   berlaku di semua perangkat / browser
 ══════════════════════════════════════ */
+
+// Cache lokal hanya untuk display cepat, kebenaran ada di Sheet
 function isTokoTutup(){ return localStorage.getItem("wd-tutup")==="1"; }
+function setTokoTutupLokal(tutup){ localStorage.setItem("wd-tutup", tutup?"1":"0"); }
 
 function applyStatusToko(){
   const tutup = isTokoTutup();
@@ -553,10 +558,34 @@ function applyStatusToko(){
   if(label) label.textContent = tutup ? "Tutup" : "Buka";
 }
 
-function toggleWarung(){
-  localStorage.setItem("wd-tutup", isTokoTutup()?"0":"1");
+// Ambil status toko dari Sheet — dipanggil saat halaman dimuat
+async function syncStatusTokoFromSheet(){
+  if(!CFG.scriptUrl) return;
+  try{
+    const data = await apiGet("getStatusToko", true);
+    if(data && data.statusToko){
+      const tutup = data.statusToko === "tutup";
+      setTokoTutupLokal(tutup);
+      applyStatusToko();
+    }
+  }catch(e){ /* pakai cache lokal jika gagal */ }
+}
+
+// Toggle: ubah di Sheet dulu, baru update lokal
+async function toggleWarung(){
+  const akanTutup = !isTokoTutup();
+  // Update lokal dulu supaya UI responsif
+  setTokoTutupLokal(akanTutup);
   applyStatusToko();
-  toast(isTokoTutup() ? "🔴 Warung Tutup" : "✅ Warung Buka", isTokoTutup()?"err":"ok", 2000);
+  toast(akanTutup ? "🔴 Warung Tutup" : "✅ Warung Buka", akanTutup?"err":"ok", 2000);
+  // Kirim ke Sheet
+  if(CFG.scriptUrl){
+    try{
+      await apiPost({action:"setStatusToko", status: akanTutup?"tutup":"buka"});
+    }catch(e){
+      toast("⚠️ Gagal simpan status ke server","err",3000);
+    }
+  }
 }
 
 /* ══════════════════════════════════════
@@ -732,7 +761,16 @@ function getFiltered(){
 
 function renderMenu(){
   const items=getFiltered(), grid=$("menu-grid");
-  if(!items.length){ grid.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><h3>Tidak ditemukan</h3><p>Coba kata kunci lain</p></div>`; return; }
+  if(!items.length){
+    if(!MENU.length){
+      // Menu belum dimuat sama sekali
+      grid.innerHTML=`<div class="empty"><div class="empty-icon">🍽️</div><h3>Menu belum tersedia</h3><p>Sedang memuat dari server...</p><button class="btn btn-outline" style="margin-top:14px" onclick="muatMenuBackground(true)">🔄 Muat Ulang</button></div>`;
+    } else {
+      // Ada menu tapi tidak cocok dengan pencarian
+      grid.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><h3>Tidak ditemukan</h3><p>Coba kata kunci lain</p></div>`;
+    }
+    return;
+  }
   grid.innerHTML = items.map(item=>{
     const qty  = CART[item.id]||0;
     const ctrl = qty===0
@@ -1087,10 +1125,10 @@ async function hapusMenu(id,nama){
    Pembeli akan langsung masuk ke halaman menu.
 ══════════════════════════════════════ */
 const DEFAULT_CFG = {
-  namaWarung : "Warung Z",
+  namaWarung : "Warung Zul",
   waNumber   : "6285346925509",
-  tagline    : "Buka - Pesan sekarang!",
-  scriptUrl  : "https://script.google.com/macros/s/AKfycbwkyxR-t6biMd6S6gOwFTJwlLX5BE1Ol5TlGhutePVW6NpXNaGRm14V1ODflu-xw12OTA/exec",
+  tagline    : "Pesan sekarang!",
+  scriptUrl  : "https://script.google.com/macros/s/AKfycbxyzq8LeE67iGZOFnPaAcJ0vPVG4V3t9NqftauURGx-fGG_pawAG-A_czHQ5PC_3yDwZQ/exec",
   adminPass  : "",
 };
 
@@ -1121,6 +1159,7 @@ function init(){
   goto("menu");
   if(CFG.scriptUrl && CFG.scriptUrl.startsWith("https://")){
     muatMenuBackground(false);
+    syncStatusTokoFromSheet(); // Sinkron status buka/tutup dari Sheet
   }
 }
 init();
