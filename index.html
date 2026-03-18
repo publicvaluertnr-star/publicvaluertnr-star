@@ -103,8 +103,6 @@ input,textarea,select,button{font-family:var(--font)}
 .toggle-knob{width:15px;height:15px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .toggle-track.on .toggle-knob{transform:translateX(15px)}
 
-
-
 /* KATEGORI */
 .cats{display:flex;gap:8px;padding:14px 16px 6px;overflow-x:auto;scrollbar-width:none}
 .cats::-webkit-scrollbar{display:none}
@@ -302,7 +300,6 @@ input,textarea,select,button{font-family:var(--font)}
         <div class="header-sub"><span class="dot" id="status-dot"></span><span id="hdr-tagline">Buka · Pesan sekarang</span></div>
       </div>
       <div class="header-icons">
-        <!-- Tombol admin — hanya tampil setelah login admin -->
         <div id="admin-controls" style="display:none;align-items:center;gap:8px">
           <button class="toggle-btn" id="toggle-btn" onclick="toggleWarung()" title="Buka/Tutup Warung">
             <div class="toggle-track on" id="toggle-track"><div class="toggle-knob"></div></div>
@@ -311,17 +308,13 @@ input,textarea,select,button{font-family:var(--font)}
           <button class="icon-btn" onclick="goto('admin')" title="Dashboard Admin">📊</button>
           <button class="icon-btn" onclick="tampilSetup()" title="Pengaturan">⚙️</button>
         </div>
-        <!-- Login pemilik: ketuk nama warung 5x -->
       </div>
     </div>
     <div class="search-wrap"><span class="search-icon">🔍</span><input id="search-inp" placeholder="Cari menu..."></div>
   </div>
-
-  <!-- Status koneksi -->
   <div id="koneksi-status" class="koneksi-bar" style="display:none"></div>
   <div class="cats" id="cats"></div>
   <div class="menu-grid" id="menu-grid"></div>
-
   <div class="cart-float" id="cart-float">
     <button class="cart-main-btn" onclick="if(isTokoTutup()){abukaModal('modal-tutup');}else{goto('cart');}">
       <span class="cart-pill" id="cart-pill">0 item</span>
@@ -497,7 +490,6 @@ const $   = id => document.getElementById(id);
 
 function getTodayStr(){ return new Date().toLocaleDateString("id-ID"); }
 
-/* No. Order berbasis kategori (3 huruf pertama), reset harian */
 function genOrderId(kat){
   const prefix = kat ? kat.slice(0,1).toUpperCase()+kat.slice(1,3).toLowerCase() : "Ord";
   const today  = getTodayStr();
@@ -552,16 +544,13 @@ function isTokoTutup(){ return localStorage.getItem("wd-tutup")==="1"; }
 
 function applyStatusToko(){
   const tutup = isTokoTutup();
-  /* dot + tagline */
   const dot = $("status-dot");
   const tag = $("hdr-tagline");
   if(dot){ dot.style.background = tutup?"#FF4444":"#5CFF90"; dot.style.animation = tutup?"none":"blink 2s infinite"; }
   if(tag){ tag.textContent = tutup ? "Tutup · Tidak menerima pesanan" : (CFG.tagline||"Buka · Pesan sekarang"); }
-  /* toggle knob & label */
   const track = $("toggle-track"); const label = $("toggle-label");
   if(track) track.classList.toggle("on",!tutup);
   if(label) label.textContent = tutup ? "Tutup" : "Buka";
-  /* Menu tetap tampil normal, cart float tetap muncul */
 }
 
 function toggleWarung(){
@@ -626,7 +615,6 @@ function cekSetup(){ $("setup-btn").disabled = !(v("s-nama")&&v("s-wa")&&v("s-sc
 async function simpanSetup(){
   CFG = { namaWarung:v("s-nama"), waNumber:v("s-wa").replace(/\D/g,""), tagline:v("s-tagline"), scriptUrl:v("s-script"), adminPass:v("s-pass") };
   saveCFG(); updateHeader();
-  // Jika tidak ada password, otomatis aktifkan mode pemilik
   if(!CFG.adminPass){
     sessionStorage.setItem("wd-admin-login","1");
     setAdminMode(true);
@@ -668,7 +656,6 @@ async function muatMenuBackground(showToast){
     }
   }catch(e){
     setKoneksiStatus("err");
-    /* Tampilkan pesan lebih spesifik sesuai jenis error */
     const detail = e.message==="timeout"      ? "Apps Script lambat — coba lagi atau cek koneksi"
                  : e.message==="script_error" ? "URL salah atau deployment belum diperbarui"
                  : "Periksa URL & status deployment Apps Script";
@@ -829,7 +816,7 @@ async function kirimPesanan(){
     return m ? `${m.nama} x${q} = ${rp(m.harga*q)}` : null;
   }).filter(Boolean);
 
-  const noOrder   = genOrderId(deteksiKategoriUtama());
+  const noOrder = genOrderId(deteksiKategoriUtama());
   lastOrder = {noOrder,nama,hp,alamat,catatan,waktu,items:{...CART},total:tf};
 
   const msg = [
@@ -876,7 +863,6 @@ function pesanLagi(){
    ADMIN
 ══════════════════════════════════════ */
 function bukaLoginPemilik(){
-  // Jika sudah login admin, langsung toggle logout
   if(sessionStorage.getItem("wd-admin-login")==="1"){
     if(confirm("Keluar dari mode pemilik?")){
       sessionStorage.removeItem("wd-admin-login");
@@ -885,22 +871,18 @@ function bukaLoginPemilik(){
     }
     return;
   }
-  // Belum login → tampilkan modal password
   if(CFG.adminPass){
     $("pass-inp").value="";
     abukaModal("modal-pass");
     setTimeout(()=>$("pass-inp").focus(),100);
   } else {
-    // Tidak ada password → langsung aktifkan
     sessionStorage.setItem("wd-admin-login","1");
     setAdminMode(true);
     toast("✅ Mode pemilik aktif","ok",2000);
   }
 }
 
-function bukaAdmin(){
-  bukaLoginPemilik();
-}
+function bukaAdmin(){ bukaLoginPemilik(); }
 
 function setAdminMode(aktif){
   const ctrl = $("admin-controls");
@@ -908,7 +890,6 @@ function setAdminMode(aktif){
   applyStatusToko();
 }
 
-// Ketuk nama warung 5x dalam 3 detik → login pemilik
 let _tapCount=0, _tapTimer=null;
 function ketukNamaWarung(){
   _tapCount++;
@@ -920,6 +901,7 @@ function ketukNamaWarung(){
     bukaLoginPemilik();
   }
 }
+
 function cekPass(){
   if($("pass-inp").value===CFG.adminPass){
     tutupModal("modal-pass");
@@ -951,7 +933,6 @@ async function muatPesanan(){
     const today   = new Date().toLocaleDateString("id-ID");
     const todayP  = pesanan.filter(p=>String(p.waktu).startsWith(today));
     updateStats(pesanan, todayP);
-    // Tampilkan hanya pesanan hari ini
     if(!todayP.length){ list.innerHTML=`<div class="empty"><div class="empty-icon">📭</div><p>Belum ada pesanan hari ini.</p></div>`; return; }
     list.innerHTML = [...todayP].reverse().map(p=>{
       const st = (p.status||"Baru").toLowerCase();
@@ -1001,7 +982,6 @@ async function ubahStatus(noOrder, status, selectEl){
   try{
     await apiPost({action:"ubahStatus",noOrder,status});
     toast("Status: "+status,"ok");
-    /* Sync data-status tombol WA di kartu yang sama */
     if(selectEl){
       const card = selectEl.closest(".order-card");
       if(card){ const wb=card.querySelector("[data-status]"); if(wb) wb.dataset.status=status; }
@@ -1023,7 +1003,6 @@ function hubungiPesanan(btn){
   window.open("https://wa.me/"+hp.replace(/\D/g,"")+"?text="+encodeURIComponent(msg),"_blank");
 }
 
-/* ─── MANAJEMEN MENU ─── */
 function hapusDariList(btn, status){
   if(status !== "Selesai"){
     toast("Ubah status ke Selesai dulu sebelum menghapus dari list","err",3000);
@@ -1031,7 +1010,6 @@ function hapusDariList(btn, status){
   }
   const card = btn.closest(".order-card");
   if(!card) return;
-  // Animasi fade out lalu hapus
   card.style.transition = "opacity .3s, transform .3s";
   card.style.opacity    = "0";
   card.style.transform  = "translateX(30px)";
@@ -1104,17 +1082,45 @@ async function hapusMenu(id,nama){
 }
 
 /* ══════════════════════════════════════
+   CONFIG BAWAAN
+   Edit bagian ini lalu upload ulang ke GitHub.
+   Pembeli akan langsung masuk ke halaman menu.
+══════════════════════════════════════ */
+const DEFAULT_CFG = {
+  namaWarung : "Toko Zul",
+  waNumber   : "6285346925509",
+  tagline    : "Pesan sekarang!",
+  scriptUrl  : "https://script.google.com/macros/s/AKfycbx8hsFvyId33fFXm23q1N3HCXwZaWkHRj8RGsE9e5ORxY5K395I1IwnpQudDtTwWXKGuw/exec",
+  adminPass  : "",
+};
+
+/* ══════════════════════════════════════
    INIT
 ══════════════════════════════════════ */
 function init(){
   loadCFG(); loadCart();
-  if(CFG.namaWarung && CFG.waNumber && CFG.scriptUrl){
-    updateHeader(); renderKat(); renderMenu();
-    // Restore admin mode jika sesi masih aktif
-    if(sessionStorage.getItem("wd-admin-login")==="1") setAdminMode(true);
-    goto("menu"); muatMenuBackground(false);
-  } else {
-    goto("setup");
+
+  // Jika localStorage kosong (pembeli baru / browser lain), pakai DEFAULT_CFG
+  if(!CFG.namaWarung || !CFG.waNumber){
+    CFG = {...DEFAULT_CFG};
+    saveCFG();
+  }
+
+  // Selalu pastikan scriptUrl dari DEFAULT_CFG terpakai
+  // (agar perubahan di file langsung berlaku tanpa clear localStorage)
+  if(DEFAULT_CFG.scriptUrl && DEFAULT_CFG.scriptUrl !== "https://script.google.com/macros/s/AKfycbx8hsFvyId33fFXm23q1N3HCXwZaWkHRj8RGsE9e5ORxY5K395I1IwnpQudDtTwWXKGuw/exec"){
+    CFG.scriptUrl  = DEFAULT_CFG.scriptUrl;
+    CFG.namaWarung = DEFAULT_CFG.namaWarung;
+    CFG.waNumber   = DEFAULT_CFG.waNumber;
+    CFG.tagline    = DEFAULT_CFG.tagline;
+    saveCFG();
+  }
+
+  updateHeader(); renderKat(); renderMenu();
+  if(sessionStorage.getItem("wd-admin-login")==="1") setAdminMode(true);
+  goto("menu");
+  if(CFG.scriptUrl && CFG.scriptUrl !== "https://script.google.com/macros/s/AKfycbx8hsFvyId33fFXm23q1N3HCXwZaWkHRj8RGsE9e5ORxY5K395I1IwnpQudDtTwWXKGuw/exec"){
+    muatMenuBackground(false);
   }
 }
 init();
