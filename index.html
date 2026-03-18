@@ -255,7 +255,6 @@ input,textarea,select,button{font-family:var(--font)}
 <div id="loader"><div class="spinner"></div><p style="font-size:13px;color:var(--muted)">Memuat...</p></div>
 <div class="app">
 
-<!-- ══ SETUP ══ -->
 <div id="page-setup" class="page on">
   <div class="setup-hero">
     <span class="setup-hero-icon">🍽️</span>
@@ -282,16 +281,11 @@ input,textarea,select,button{font-family:var(--font)}
       <div class="field" style="margin-bottom:12px"><label>URL Apps Script Web App *</label><input id="s-script" type="url" placeholder="https://script.google.com/macros/s/..."><div class="hint">Sheet dan data menu dibuat otomatis setelah terhubung</div></div>
       <button class="btn btn-outline btn-block" id="test-btn" onclick="testKoneksi()" type="button" style="margin-bottom:0">🔗 Test Koneksi ke Google Sheet</button>
     </div>
-    <div class="card" style="margin-bottom:16px">
-      <div class="sec-title">Keamanan Admin</div>
-      <div class="field" style="margin-bottom:0"><label>Password Dashboard Admin <span style="font-weight:400;text-transform:none">(opsional)</span></label><input id="s-pass" type="password" placeholder="Kosongkan jika tidak ingin password"></div>
-    </div>
     <button class="btn btn-primary btn-block btn-lg" id="setup-btn" onclick="simpanSetup()" disabled>Mulai Berjualan →</button>
     <p style="text-align:center;font-size:11px;color:var(--muted);margin-top:9px">Data tersimpan di browser Anda</p>
   </div>
 </div>
 
-<!-- ══ MENU ══ -->
 <div id="page-menu" class="page">
   <div class="menu-header">
     <div class="header-row">
@@ -324,7 +318,6 @@ input,textarea,select,button{font-family:var(--font)}
   </div>
 </div>
 
-<!-- ══ KERANJANG ══ -->
 <div id="page-cart" class="page">
   <div class="sub-hdr">
     <button class="icon-btn" onclick="goto('menu')">←</button>
@@ -341,7 +334,6 @@ input,textarea,select,button{font-family:var(--font)}
   <div class="checkout-bar"><button class="btn btn-primary btn-block btn-lg" onclick="if(isTokoTutup()){abukaModal('modal-tutup');}else if(!totalItem()){toast('🛒 Pilih menu dulu yuk!','err');}else{goto('form');}">Lanjut Pemesanan →</button></div>
 </div>
 
-<!-- ══ FORM ══ -->
 <div id="page-form" class="page">
   <div class="sub-hdr">
     <button class="icon-btn" onclick="goto('cart')">←</button>
@@ -364,7 +356,6 @@ input,textarea,select,button{font-family:var(--font)}
   </div>
 </div>
 
-<!-- ══ SUKSES ══ -->
 <div id="page-sukses" class="page">
   <div class="sukses-card suk-card">
     <div class="suk-anim">✅</div>
@@ -377,7 +368,6 @@ input,textarea,select,button{font-family:var(--font)}
   </div>
 </div>
 
-<!-- ══ ADMIN ══ -->
 <div id="page-admin" class="page">
   <div class="admin-hdr">
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -411,7 +401,6 @@ input,textarea,select,button{font-family:var(--font)}
   </div>
 </div>
 
-<!-- ══ MODAL PASSWORD ══ -->
 <div class="modal-bg" id="modal-pass">
   <div class="modal" style="border-radius:20px;max-width:340px;margin:auto">
     <h3>🔐 Login Admin</h3>
@@ -423,7 +412,6 @@ input,textarea,select,button{font-family:var(--font)}
   </div>
 </div>
 
-<!-- ══ MODAL MENU EDITOR ══ -->
 <div class="modal-bg" id="modal-menu">
   <div class="modal">
     <button class="modal-close" onclick="tutupModal('modal-menu')">✕</button>
@@ -462,7 +450,6 @@ input,textarea,select,button{font-family:var(--font)}
   </div>
 </div>
 
-<!-- ══ MODAL TUTUP ══ -->
 <div class="modal-bg" id="modal-tutup">
   <div class="modal" style="border-radius:20px;max-width:360px;margin:auto;text-align:center;padding:36px 28px">
     <div style="font-size:52px;margin-bottom:14px">🔒</div>
@@ -472,9 +459,7 @@ input,textarea,select,button{font-family:var(--font)}
   </div>
 </div>
 
-</div><!-- end .app -->
-
-<script>
+</div><script>
 /* ══════════════════════════════════════
    STATE
 ══════════════════════════════════════ */
@@ -539,11 +524,7 @@ function loadCart(){ try{ CART = JSON.parse(localStorage.getItem("wd-cart")||"{}
 
 /* ══════════════════════════════════════
    BUKA / TUTUP WARUNG
-   Status disimpan di Google Sheet agar
-   berlaku di semua perangkat / browser
 ══════════════════════════════════════ */
-
-// Cache lokal hanya untuk display cepat, kebenaran ada di Sheet
 function isTokoTutup(){ return localStorage.getItem("wd-tutup")==="1"; }
 function setTokoTutupLokal(tutup){ localStorage.setItem("wd-tutup", tutup?"1":"0"); }
 
@@ -558,7 +539,6 @@ function applyStatusToko(){
   if(label) label.textContent = tutup ? "Tutup" : "Buka";
 }
 
-// Ambil status toko dari Sheet — dipanggil saat halaman dimuat
 async function syncStatusTokoFromSheet(){
   if(!CFG.scriptUrl) return;
   try{
@@ -568,23 +548,17 @@ async function syncStatusTokoFromSheet(){
       setTokoTutupLokal(tutup);
       applyStatusToko();
     }
-  }catch(e){ /* pakai cache lokal jika gagal */ }
+  }catch(e){ /* abaikan jika gagal load awal */ }
 }
 
-// Toggle: ubah di Sheet dulu, baru update lokal
 async function toggleWarung(){
   const akanTutup = !isTokoTutup();
-  // Update lokal dulu supaya UI responsif
   setTokoTutupLokal(akanTutup);
   applyStatusToko();
   toast(akanTutup ? "🔴 Warung Tutup" : "✅ Warung Buka", akanTutup?"err":"ok", 2000);
-  // Kirim ke Sheet
   if(CFG.scriptUrl){
-    try{
-      await apiPost({action:"setStatusToko", status: akanTutup?"tutup":"buka"});
-    }catch(e){
-      toast("⚠️ Gagal simpan status ke server","err",3000);
-    }
+    try{ await apiPost({action:"setStatusToko", status: akanTutup?"tutup":"buka"}); }
+    catch(e){ toast("⚠️ Gagal simpan status ke server","err",3000); }
   }
 }
 
@@ -618,6 +592,21 @@ function jsonpGet(action, ms){
   });
 }
 
+// Untuk cek password karena butuh kirim parameter tambahan
+async function apiGetWithParams(params, ms){
+  ms = ms||20000;
+  return new Promise((resolve,reject)=>{
+    const cb = "wdcb_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
+    const s  = document.createElement("script");
+    let done = false;
+    const t  = setTimeout(()=>{ if(done)return; done=true; delete window[cb]; s.remove(); reject(new Error("timeout")); }, ms);
+    window[cb] = data=>{ if(done)return; done=true; clearTimeout(t); delete window[cb]; s.remove(); resolve(data); };
+    s.src = CFG.scriptUrl+"?"+params+"&callback="+cb+"&t="+Date.now();
+    s.onerror = ()=>{ if(done)return; done=true; clearTimeout(t); delete window[cb]; s.remove(); reject(new Error("script_error")); };
+    document.head.appendChild(s);
+  });
+}
+
 async function apiGet(action, silent){
   try{ return await jsonpGet(action,18000); }
   catch(e1){
@@ -642,12 +631,8 @@ $("s-script").addEventListener("input",cekSetup);
 function cekSetup(){ $("setup-btn").disabled = !(v("s-nama")&&v("s-wa")&&v("s-script")); }
 
 async function simpanSetup(){
-  CFG = { namaWarung:v("s-nama"), waNumber:v("s-wa").replace(/\D/g,""), tagline:v("s-tagline"), scriptUrl:v("s-script"), adminPass:v("s-pass") };
+  CFG = { namaWarung:v("s-nama"), waNumber:v("s-wa").replace(/\D/g,""), tagline:v("s-tagline"), scriptUrl:v("s-script") };
   saveCFG(); updateHeader();
-  if(!CFG.adminPass){
-    sessionStorage.setItem("wd-admin-login","1");
-    setAdminMode(true);
-  }
   goto("menu"); muatMenuBackground(true);
 }
 
@@ -695,10 +680,10 @@ async function muatMenuBackground(showToast){
 function setKoneksiStatus(s){
   const el = $("koneksi-status"); if(!el) return;
   const map = {
-    loading: { txt:"⏳ Memuat menu dari server...", cls:"",    show:true  },
+    loading: { txt:"⏳ Memuat menu dari server...", cls:"",   show:true  },
     ok:      { txt:"",                              cls:"ok",  show:false },
     warn:    { txt:"🟡 Menu kosong — tambah menu di dashboard Admin (📊)", cls:"", show:true },
-    err:     { txt:"🔴 Gagal memuat menu &nbsp;·&nbsp; <a href='#' onclick='muatMenuBackground(true);return false'>🔄 Coba Lagi</a> &nbsp;·&nbsp; <a href='#' onclick='tampilSetup();return false'>⚙️ Cek Pengaturan</a>", cls:"err", show:true },
+    err:     { txt:"🔴 Gagal memuat menu  ·  <a href='#' onclick='muatMenuBackground(true);return false'>🔄 Coba Lagi</a>  ·  <a href='#' onclick='tampilSetup();return false'>⚙️ Cek Pengaturan</a>", cls:"err", show:true },
   };
   const m = map[s]||map.loading;
   el.innerHTML=m.txt; el.className="koneksi-bar "+m.cls; el.style.display=m.show?"block":"none";
@@ -709,7 +694,6 @@ function tampilSetup(){
   $("s-wa").value     = CFG.waNumber  ||"";
   $("s-tagline").value= CFG.tagline   ||"";
   $("s-script").value = CFG.scriptUrl ||"";
-  $("s-pass").value   = CFG.adminPass ||"";
   $("setup-btn").disabled = false;
   $("setup-btn").textContent = "Simpan Perubahan →";
   goto("setup");
@@ -763,10 +747,8 @@ function renderMenu(){
   const items=getFiltered(), grid=$("menu-grid");
   if(!items.length){
     if(!MENU.length){
-      // Menu belum dimuat sama sekali
       grid.innerHTML=`<div class="empty"><div class="empty-icon">🍽️</div><h3>Menu belum tersedia</h3><p>Sedang memuat dari server...</p><button class="btn btn-outline" style="margin-top:14px" onclick="muatMenuBackground(true)">🔄 Muat Ulang</button></div>`;
     } else {
-      // Ada menu tapi tidak cocok dengan pencarian
       grid.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><h3>Tidak ditemukan</h3><p>Coba kata kunci lain</p></div>`;
     }
     return;
@@ -909,18 +891,12 @@ function bukaLoginPemilik(){
     }
     return;
   }
-  if(CFG.adminPass){
-    $("pass-inp").value="";
-    abukaModal("modal-pass");
-    setTimeout(()=>$("pass-inp").focus(),100);
-  } else {
-    sessionStorage.setItem("wd-admin-login","1");
-    setAdminMode(true);
-    toast("✅ Mode pemilik aktif","ok",2000);
-  }
+  
+  // Langsung buka modal untuk cek password ke server
+  $("pass-inp").value="";
+  abukaModal("modal-pass");
+  setTimeout(()=>$("pass-inp").focus(),100);
 }
-
-function bukaAdmin(){ bukaLoginPemilik(); }
 
 function setAdminMode(aktif){
   const ctrl = $("admin-controls");
@@ -940,14 +916,38 @@ function ketukNamaWarung(){
   }
 }
 
-function cekPass(){
-  if($("pass-inp").value===CFG.adminPass){
-    tutupModal("modal-pass");
-    sessionStorage.setItem("wd-admin-login","1");
-    setAdminMode(true);
-    toast("✅ Mode pemilik aktif","ok",2000);
-  } else toast("Password salah!","err");
+async function cekPass() {
+  const passInp = $("pass-inp").value;
+  if (!passInp) {
+    toast("Masukkan password!", "err");
+    return;
+  }
+
+  const btn = document.querySelector("#modal-pass .btn-primary");
+  const oldText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Mengecek...";
+
+  try {
+    const res = await apiGetWithParams("action=cekLogin&pass=" + encodeURIComponent(passInp));
+    
+    if (res && res.valid) {
+      tutupModal("modal-pass");
+      sessionStorage.setItem("wd-admin-login", "1");
+      setAdminMode(true);
+      toast("✅ Akses Admin Diberikan", "ok", 2000);
+    } else {
+      toast("❌ Password salah!", "err");
+    }
+  } catch (e) {
+    toast("⚠️ Gagal terhubung ke server", "err");
+  }
+
+  btn.disabled = false;
+  btn.textContent = oldText;
+  $("pass-inp").value = "";
 }
+
 $("pass-inp").addEventListener("keydown",e=>{ if(e.key==="Enter") cekPass(); });
 $("modal-pass").addEventListener("click",e=>{ if(e.target===$("modal-pass")) tutupModal("modal-pass"); });
 $("modal-menu").addEventListener("click",e=>{ if(e.target===$("modal-menu")) tutupModal("modal-menu"); });
@@ -1121,15 +1121,12 @@ async function hapusMenu(id,nama){
 
 /* ══════════════════════════════════════
    CONFIG BAWAAN
-   Edit bagian ini lalu upload ulang ke GitHub.
-   Pembeli akan langsung masuk ke halaman menu.
 ══════════════════════════════════════ */
 const DEFAULT_CFG = {
   namaWarung : "Warung Zul",
   waNumber   : "6285346925509",
   tagline    : "Pesan sekarang!",
-  scriptUrl  : "https://script.google.com/macros/s/AKfycbxyzq8LeE67iGZOFnPaAcJ0vPVG4V3t9NqftauURGx-fGG_pawAG-A_czHQ5PC_3yDwZQ/exec",
-  adminPass  : "",
+  scriptUrl  : "https://script.google.com/macros/s/AKfycbwZ_1_kASCowljBPnj7w4jeVn4WgIZK0a2VFViNtu33yiAuHRsLx3ypBga5bvljDjSS4Q/exec"
 };
 
 /* ══════════════════════════════════════
@@ -1138,14 +1135,11 @@ const DEFAULT_CFG = {
 function init(){
   loadCFG(); loadCart();
 
-  // Jika localStorage kosong (pembeli baru / browser lain), pakai DEFAULT_CFG
   if(!CFG.namaWarung || !CFG.waNumber){
     CFG = {...DEFAULT_CFG};
     saveCFG();
   }
 
-  // Selalu pastikan scriptUrl dari DEFAULT_CFG terpakai
-  // (agar perubahan di file langsung berlaku tanpa clear localStorage)
   if(DEFAULT_CFG.scriptUrl && DEFAULT_CFG.scriptUrl.startsWith("https://")){
     CFG.scriptUrl  = DEFAULT_CFG.scriptUrl;
     CFG.namaWarung = DEFAULT_CFG.namaWarung;
@@ -1159,7 +1153,7 @@ function init(){
   goto("menu");
   if(CFG.scriptUrl && CFG.scriptUrl.startsWith("https://")){
     muatMenuBackground(false);
-    syncStatusTokoFromSheet(); // Sinkron status buka/tutup dari Sheet
+    syncStatusTokoFromSheet(); 
   }
 }
 init();
