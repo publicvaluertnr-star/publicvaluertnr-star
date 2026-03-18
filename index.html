@@ -1087,7 +1087,7 @@ async function hapusMenu(id,nama){
    Pembeli akan langsung masuk ke halaman menu.
 ══════════════════════════════════════ */
 const DEFAULT_CFG = {
-  namaWarung : "Toko Zul",
+  namaWarung : "Warung Zul",
   waNumber   : "6285346925509",
   tagline    : "Pesan sekarang!",
   scriptUrl  : "https://script.google.com/macros/s/AKfycbx8hsFvyId33fFXm23q1N3HCXwZaWkHRj8RGsE9e5ORxY5K395I1IwnpQudDtTwWXKGuw/exec",
@@ -1108,7 +1108,7 @@ function init(){
 
   // Selalu pastikan scriptUrl dari DEFAULT_CFG terpakai
   // (agar perubahan di file langsung berlaku tanpa clear localStorage)
-  if(DEFAULT_CFG.scriptUrl && DEFAULT_CFG.scriptUrl !== "https://script.google.com/macros/s/AKfycbx8hsFvyId33fFXm23q1N3HCXwZaWkHRj8RGsE9e5ORxY5K395I1IwnpQudDtTwWXKGuw/exec"){
+  if(DEFAULT_CFG.scriptUrl && DEFAULT_CFG.scriptUrl.startsWith("https://")){
     CFG.scriptUrl  = DEFAULT_CFG.scriptUrl;
     CFG.namaWarung = DEFAULT_CFG.namaWarung;
     CFG.waNumber   = DEFAULT_CFG.waNumber;
@@ -1119,7 +1119,7 @@ function init(){
   updateHeader(); renderKat(); renderMenu();
   if(sessionStorage.getItem("wd-admin-login")==="1") setAdminMode(true);
   goto("menu");
-  if(CFG.scriptUrl && CFG.scriptUrl !== "https://script.google.com/macros/s/AKfycbx8hsFvyId33fFXm23q1N3HCXwZaWkHRj8RGsE9e5ORxY5K395I1IwnpQudDtTwWXKGuw/exec"){
+  if(CFG.scriptUrl && CFG.scriptUrl.startsWith("https://")){
     muatMenuBackground(false);
   }
 }
